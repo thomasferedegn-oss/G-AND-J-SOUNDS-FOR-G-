@@ -1,0 +1,671 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G Sound Safari - Phonics Games</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--ink:#24324a}
+body{
+ font-family:"Trebuchet MS",system-ui,sans-serif;
+ color:var(--ink);
+ background:linear-gradient(135deg,#fff7d6,#e6f7ff 55%,#f5e9ff);
+ min-height:100vh
+}
+.game-card{
+ background:#fff;border:3px solid #e8edf5;
+ border-radius:1.5rem;box-shadow:0 8px 0 #dce4ef;
+}
+.choice{
+ border:3px solid #e5eaf2;border-radius:1.1rem;
+ background:white;transition:.15s;min-height:76px
+}
+.choice:hover{border-color:#93c5fd;background:#eff6ff}
+.choice.correct{border-color:#22c55e;background:#dcfce7}
+.choice.wrong{border-color:#fb7185;background:#ffe4e6}
+.tab{
+ border-radius:999px;padding:.7rem 1rem;font-weight:800;
+ background:#fff;border:2px solid #e5e7eb
+}
+.tab.active{background:#4338ca;color:white;border-color:#4338ca}
+.sound-pill{
+ display:inline-flex;align-items:center;gap:.35rem;
+ border-radius:999px;padding:.35rem .75rem;font-weight:900
+}
+.soft{background:#fce7f3;color:#9d174d}
+.hard{background:#dbeafe;color:#1d4ed8}
+.picture{
+ height:125px;width:100%;display:flex;align-items:center;
+ justify-content:center;background:linear-gradient(135deg,#f8fafc,#eef2ff);
+ border-radius:1rem;overflow:hidden;font-size:4rem
+}
+.picture img{width:100%;height:100%;object-fit:contain}
+button:focus-visible,input:focus-visible{
+ outline:4px solid #fbbf24;outline-offset:3px
+}
+</style>
+</head>
+<body>
+
+<header class="max-w-6xl mx-auto px-4 pt-7 pb-4">
+ <div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+   <p class="font-black tracking-widest text-xs text-indigo-600 uppercase">
+    YT Tutorial Center • Phonics Playground
+   </p>
+   <h1 class="text-4xl md:text-5xl font-black mt-1">
+    G Sound Safari 🦒
+   </h1>
+   <p class="text-slate-600 font-semibold mt-2">
+    Learn English sounds with Amharic meanings.
+   </p>
+  </div>
+  <div class="game-card p-3 text-center min-w-28">
+   <div class="text-3xl">⭐</div>
+   <div class="font-black"><span id="score">0</span> points</div>
+  </div>
+ </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 pb-12">
+
+<section class="grid sm:grid-cols-2 gap-3 mb-5">
+ <div class="game-card p-4">
+  <h2 class="font-black text-xl">🌸 Soft G</h2>
+  <span class="sound-pill soft">/j/ • ጄ / ጂ / ጀ</span>
+  <p class="mt-2 text-slate-600">
+   Sounds like the beginning of Jump.
+  </p>
+  <button class="mt-3 rounded-full bg-pink-100 px-4 py-2 font-bold"
+   onclick="speak('Soft G. Juh.')">
+   🔊 Hear Soft G
+  </button>
+ </div>
+
+ <div class="game-card p-4">
+  <h2 class="font-black text-xl">🚀 Hard G</h2>
+  <span class="sound-pill hard">/g/ • ገ / ጌ / ጊ / ጎ / ጉ</span>
+  <p class="mt-2 text-slate-600">
+   Sounds like the beginning of Go.
+  </p>
+  <button class="mt-3 rounded-full bg-blue-100 px-4 py-2 font-bold"
+   onclick="speak('Hard G. Guh.')">
+   🔊 Hear Hard G
+  </button>
+ </div>
+</section>
+
+<nav class="flex flex-wrap gap-2 mb-5">
+ <button class="tab active" onclick="showMode('listen')">
+  🖼️ Listen & Match
+ </button>
+ <button class="tab" onclick="showMode('phoneme')">
+  🔤 Click the Sound
+ </button>
+ <button class="tab" onclick="showMode('cards')">
+  🃏 Flashcards
+ </button>
+ <button class="tab" onclick="showMode('amharic')">
+  🇪🇹 Amharic Sound Match
+ </button>
+ <button class="tab" onclick="showMode('explore')">
+  📚 Word Explorer
+ </button>
+</nav>
+
+<section id="game" class="game-card p-4 sm:p-6 min-h-[360px]"
+ aria-live="polite"></section>
+
+<section class="mt-5 game-card p-4">
+ <h2 class="font-black text-lg">🖼️ Add Your Own Pictures</h2>
+ <p class="text-sm text-slate-600">
+  Paste image URLs for each word.
+ </p>
+ <button onclick="toggleEditor()"
+  class="mt-3 rounded-full bg-amber-100 px-4 py-2 font-bold">
+  Edit Image URLs
+ </button>
+ <div id="editor" class="hidden mt-4">
+  <div id="imageFields" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+  <button onclick="saveImages()"
+   class="mt-4 rounded-full bg-indigo-600 text-white px-5 py-2 font-bold">
+   Save Pictures
+  </button>
+  <span id="saveMsg" class="ml-3 text-green-700 font-bold"></span>
+ </div>
+</section>
+
+<p class="text-center text-xs text-slate-500 mt-5">
+ Speech playback uses available browser voices. Select an English UK
+ female voice when available.
+</p>
+
+</main>
+
+<script>
+// ==========================================
+// 1. PHONICS WORD DATABASE
+// ==========================================
+// Add imageUrl to any word to display a picture.
+// Example: imageUrl:"https://example.com/giraffe.png"
+
+const words = [
+ {w:"Gem",p:"ጄም",m:"የከበረ ድንጋይ / ዕንቁ",s:"soft",e:"💎"},
+ {w:"Gel",p:"ጄል",m:"ጄል",s:"soft",e:"🧴"},
+ {w:"Gentle",p:"ጄንትል",m:"ገር / ለስላሳ / ጨዋ",s:"soft",e:"🕊️"},
+ {w:"General",p:"ጄነራል",m:"አጠቃላይ / ጄኔራል",s:"soft",e:"🧑‍✈️"},
+ {w:"Genius",p:"ጂኒየስ",m:"ሊቅ / እጅግ ብልህ",s:"soft",e:"🧠"},
+ {w:"Gesture",p:"ጄስቸር",m:"የእጅ ምልክት",s:"soft",e:"👋"},
+ {w:"Germ",p:"ጀርም",m:"ተሕዋስያን",s:"soft",e:"🦠"},
+ {w:"Giant",p:"ጃያንት",m:"ግዙፍ / ታላቅ",s:"soft",e:"🦣"},
+ {w:"Giraffe",p:"ጂራፍ",m:"ቀጭኔ",s:"soft",e:"🦒"},
+ {w:"Ginger",p:"ጂንጀር",m:"ዝንጅብል",s:"soft",e:"🫚"},
+ {w:"Gist",p:"ጂስት",m:"ዋና ሐሳብ",s:"soft",e:"💡"},
+ {w:"Gym",p:"ጂም",m:"የስፖርት ቦታ",s:"soft",e:"🏋️"},
+ {w:"Gypsy",p:"ጂፕሲ",m:"ዘላን",s:"soft",e:"🧳"},
+ {w:"Gentleman",p:"ጄንትልማን",m:"ጨዋ ሰው",s:"soft",e:"🎩"},
+ {w:"Geography",p:"ጂኦግራፊ",m:"መልክዓ ምድር",s:"soft",e:"🌍"},
+
+ {w:"Go",p:"ጎ",m:"መሄድ",s:"hard",e:"🚶"},
+ {w:"Get",p:"ጌት",m:"ማግኘት",s:"hard",e:"🎁"},
+ {w:"Give",p:"ጊቭ",m:"መስጠት",s:"hard",e:"🤲"},
+ {w:"Girl",p:"ገርል",m:"ልጃገረድ",s:"hard",e:"👧"},
+ {w:"Gift",p:"ጊፍት",m:"ስጦታ",s:"hard",e:"🎁"},
+ {w:"Game",p:"ጌም",m:"ጨዋታ",s:"hard",e:"🎲"},
+ {w:"Gate",p:"ጌት",m:"በር / መግቢያ",s:"hard",e:"🚪"},
+ {w:"Garden",p:"ጋርደን",m:"የአትክልት ቦታ",s:"hard",e:"🌷"},
+ {w:"Gold",p:"ጎልድ",m:"ወርቅ",s:"hard",e:"🥇"},
+ {w:"Good",p:"ጉድ",m:"ጥሩ",s:"hard",e:"👍"},
+ {w:"Green",p:"ግሪን",m:"አረንጓዴ",s:"hard",e:"🟢"},
+ {w:"Grass",p:"ግራስ",m:"ሣር",s:"hard",e:"🌱"},
+ {w:"Guest",p:"ጌስት",m:"እንግዳ",s:"hard",e:"🧑‍🤝‍🧑"},
+ {w:"Guide",p:"ጋይድ",m:"መሪ / አስጎብኚ",s:"hard",e:"🧭"},
+ {w:"Guitar",p:"ጊታር",m:"ጊታር",s:"hard",e:"🎸"}
+];
+
+// ==========================================
+// 2. APPLICATION STATE
+// ==========================================
+
+let score = 0;
+let mode = "listen";
+let current = null;
+let options = [];
+let flipped = false;
+let matched = false;
+
+const game = document.getElementById("game");
+
+// ==========================================
+// 3. TEXT TO SPEECH - BRITISH ENGLISH
+// ==========================================
+
+function speak(text) {
+ if (!("speechSynthesis" in window)) {
+  alert("Speech playback is not supported.");
+  return;
+ }
+
+ speechSynthesis.cancel();
+
+ const utterance = new SpeechSynthesisUtterance(text);
+ utterance.lang = "en-GB";
+ utterance.rate = 0.82;
+ utterance.pitch = 1.12;
+
+ const voices = speechSynthesis.getVoices();
+ const british = voices.filter(v => /^en-GB/i.test(v.lang));
+
+ const female = british.find(v =>
+  /female|serena|susan|kate|libby|sonia|hazel|amy/i.test(v.name)
+ );
+
+ utterance.voice =
+  female || british[0] ||
+  voices.find(v => /^en/i.test(v.lang)) || null;
+
+ speechSynthesis.speak(utterance);
+}
+
+// ==========================================
+// 4. HELPER FUNCTIONS
+// ==========================================
+
+function rand(arr) {
+ return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function shuffle(arr) {
+ return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function pic(word) {
+ if (word.imageUrl) {
+  return `<img src="${escapeAttr(word.imageUrl)}"
+   alt="${word.w}" onerror="this.style.display='none'">`;
+ }
+ return `<span>${word.e}</span>`;
+}
+
+function escapeAttr(value) {
+ return String(value || "")
+  .replace(/&/g,"&amp;")
+  .replace(/"/g,"&quot;")
+  .replace(/</g,"&lt;");
+}
+
+function addPoint() {
+ score += 10;
+ document.getElementById("score").textContent = score;
+}
+
+function showMode(selectedMode) {
+ mode = selectedMode;
+ matched = false;
+ current = null;
+
+ document.querySelectorAll("nav .tab").forEach((button,index) => {
+  const modes = ["listen","phoneme","cards","amharic","explore"];
+  button.classList.toggle("active",modes[index] === mode);
+ });
+
+ render();
+}
+
+function render() {
+ if (mode === "listen") listenGame();
+ else if (mode === "phoneme") phonemeGame();
+ else if (mode === "cards") flashcardGame();
+ else if (mode === "amharic") amharicGame();
+ else explorer();
+}
+
+// ==========================================
+// 5. GAME ONE - LISTEN AND MATCH
+// ==========================================
+
+function listenGame() {
+ matched = false;
+ current = rand(words);
+
+ options = shuffle([
+  current,
+  ...shuffle(words.filter(x => x !== current)).slice(0,3)
+ ]);
+
+ game.innerHTML = `
+ <div class="text-center">
+  <h2 class="text-2xl font-black">🖼️ Listen & Match the Image</h2>
+  <p class="text-slate-500 mt-2">Listen and choose the correct picture.</p>
+
+  <button onclick="speak('${current.w}')"
+   class="mt-5 bg-indigo-600 text-white rounded-full px-6 py-3 font-black">
+   🔊 Listen to the Word
+  </button>
+ </div>
+
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+ ${options.map((x,i) => `
+  <button class="choice p-3" onclick="checkListen(${i},this)">
+   <div class="picture">${pic(x)}</div>
+   <div class="font-black mt-2">${x.w}</div>
+   <div class="text-xs text-slate-500 mt-1">${x.m}</div>
+   <span onclick="event.stopPropagation();speak('${x.w}')"
+    class="block text-indigo-600 font-bold mt-2">🔊 Hear</span>
+  </button>
+ `).join("")}
+ </div>
+
+ <div id="feedback" class="text-center font-black text-lg mt-5"></div>
+
+ <div class="text-center mt-4">
+  <button onclick="listenGame()"
+   class="rounded-full bg-amber-400 px-6 py-3 font-black">
+   Next Word ➜
+  </button>
+ </div>
+ `;
+}
+
+function checkListen(index,element) {
+ if (matched) return;
+
+ if (options[index] === current) {
+  element.classList.add("correct");
+  document.getElementById("feedback").textContent =
+   "🌟 Brilliant! Correct answer!";
+  addPoint();
+  matched = true;
+ } else {
+  element.classList.add("wrong");
+  document.getElementById("feedback").textContent =
+   "Try again! Listen carefully.";
+ }
+}
+
+// ==========================================
+// 6. GAME TWO - CLICK THE PHONEME
+// ==========================================
+
+function phonemeGame() {
+ matched = false;
+ current = rand(words);
+
+ const choices = shuffle([
+  {s:"soft",label:"Soft G /j/ • ጄ / ጂ / ጀ"},
+  {s:"hard",label:"Hard G /g/ • ገ / ጌ / ጊ / ጎ / ጉ"}
+ ]);
+
+ game.innerHTML = `
+ <div class="text-center">
+  <h2 class="text-2xl font-black">🔤 Click the Correct Sound</h2>
+  <p class="mt-2 text-slate-500">What sound starts this word?</p>
+
+  <div class="max-w-xs mx-auto mt-5">
+   <div class="picture">${pic(current)}</div>
+   <div class="flex items-center justify-center gap-3 mt-3">
+    <span class="text-3xl font-black">${current.w}</span>
+    <button onclick="speak('${current.w}')"
+     class="rounded-full bg-indigo-100 p-3">🔊</button>
+   </div>
+   <button onclick="speak('${current.s === "soft" ? "Soft G. Juh." : "Hard G. Guh."}')"
+    class="mt-3 text-indigo-700 font-bold">
+    🔊 Hear the Starting Sound
+   </button>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-3 max-w-3xl mx-auto mt-6">
+   ${choices.map(c => `
+    <button class="choice p-5 font-black text-lg"
+     onclick="checkPhoneme('${c.s}',this)">
+     ${c.label}
+    </button>
+   `).join("")}
+  </div>
+
+  <div id="feedback" class="font-black text-lg mt-5"></div>
+
+  <button onclick="phonemeGame()"
+   class="mt-4 rounded-full bg-amber-400 px-6 py-3 font-black">
+   Next Word ➜
+  </button>
+ </div>
+ `;
+}
+
+function checkPhoneme(sound,element) {
+ if (matched) return;
+
+ if (sound === current.s) {
+  element.classList.add("correct");
+  document.getElementById("feedback").textContent =
+   "🎉 Excellent! Correct sound!";
+  addPoint();
+  matched = true;
+ } else {
+  element.classList.add("wrong");
+  document.getElementById("feedback").textContent =
+   "Try again. Listen to the word!";
+ }
+}
+
+// ==========================================
+// 7. GAME THREE - INTERACTIVE FLASHCARDS
+// ==========================================
+
+function flashcardGame() {
+ current = current || rand(words);
+
+ const sound = current.s === "soft"
+  ? "Soft G /j/ • ጄ / ጂ / ጀ"
+  : "Hard G /g/ • ገ / ጌ / ጊ / ጎ / ጉ";
+
+ game.innerHTML = `
+ <div class="text-center">
+  <h2 class="text-2xl font-black">🃏 Interactive Flashcards</h2>
+  <p class="mt-2 text-slate-500">Tap the card to reveal its meaning.</p>
+
+  <button onclick="flipCard()"
+   class="game-card p-5 w-full max-w-md mx-auto block mt-5">
+   <div class="picture">
+    ${flipped ? pic(current) : "🃏"}
+   </div>
+   <div class="text-3xl font-black mt-4">
+    ${flipped ? current.w : "What word am I?"}
+   </div>
+   <div class="mt-2 font-bold text-slate-500">
+    ${flipped ? current.p + " • " + current.m : "Tap to reveal"}
+   </div>
+  </button>
+
+  <div class="flex flex-wrap justify-center gap-3 mt-4">
+   <button onclick="speak('${current.w}')"
+    class="rounded-full bg-indigo-600 text-white px-5 py-3 font-black">
+    🔊 Hear English
+   </button>
+
+   <button onclick="speak('${current.s === "soft" ? "Soft G, j sound" : "Hard G, guh sound"}')"
+    class="rounded-full bg-pink-100 px-5 py-3 font-black">
+    🔊 Hear Sound
+   </button>
+
+   <button onclick="current=rand(words);flipped=false;flashcardGame()"
+    class="rounded-full bg-amber-400 px-5 py-3 font-black">
+    Next Card ➜
+   </button>
+  </div>
+
+  <div class="mt-5">
+   <span class="sound-pill ${current.s}">${sound}</span>
+  </div>
+ </div>
+ `;
+}
+
+function flipCard() {
+ flipped = !flipped;
+ flashcardGame();
+}
+
+// ==========================================
+// 8. GAME FOUR - AMHARIC AND ENGLISH MATCH
+// ==========================================
+
+function amharicGame() {
+ matched = false;
+
+ const pairs = [
+  {
+   en:"Soft G • /j/",
+   am:"ጄ / ጂ / ጀ",
+   s:"soft",
+   hint:"As in Gem, Giraffe and Gym"
+  },
+  {
+   en:"Hard G • /g/",
+   am:"ገ / ጌ / ጊ / ጎ / ጉ",
+   s:"hard",
+   hint:"As in Go, Give and Guitar"
+  }
+ ];
+
+ current = rand(pairs);
+ const opts = shuffle(pairs);
+
+ game.innerHTML = `
+ <div class="text-center">
+  <h2 class="text-2xl font-black">
+   🇪🇹 Amharic & English Sound Match
+  </h2>
+
+  <p class="text-slate-500 mt-2">
+   Match the English sound with its Amharic equivalent.
+  </p>
+
+  <div class="max-w-2xl mx-auto mt-6">
+   <div class="rounded-2xl bg-indigo-50 p-5">
+    <p class="font-bold text-indigo-700">ENGLISH SOUND</p>
+    <div class="text-3xl font-black mt-2">${current.en}</div>
+    <p class="mt-2">${current.hint}</p>
+
+    <button onclick="speak('${current.s === "soft" ? "Soft G, j sound" : "Hard G, guh sound"}')"
+     class="mt-3 text-indigo-700 font-bold">
+     🔊 Listen
+    </button>
+   </div>
+
+   <p class="font-black mt-5 mb-3">
+    Which Amharic guide matches?
+   </p>
+
+   <div class="grid sm:grid-cols-2 gap-3">
+    ${opts.map(o => `
+     <button class="choice p-5"
+      onclick="checkAmharic('${o.s}',this)">
+      <div class="text-2xl font-black" lang="am">${o.am}</div>
+      <div class="text-sm text-slate-500 mt-2">
+       ${o.s === "soft" ? "Soft sound family" : "Hard sound family"}
+      </div>
+     </button>
+    `).join("")}
+   </div>
+
+   <div id="feedback" class="font-black text-lg mt-5"></div>
+
+   <button onclick="amharicGame()"
+    class="mt-4 rounded-full bg-amber-400 px-6 py-3 font-black">
+    Next Match ➜
+   </button>
+  </div>
+ </div>
+ `;
+}
+
+function checkAmharic(sound,element) {
+ if (matched) return;
+
+ if (sound === current.s) {
+  element.classList.add("correct");
+  document.getElementById("feedback").textContent =
+   "👏 በጣም ጥሩ! Great matching!";
+  addPoint();
+  matched = true;
+ } else {
+  element.classList.add("wrong");
+  document.getElementById("feedback").textContent =
+   "Try again! Compare the sounds.";
+ }
+}
+
+// ==========================================
+// 9. GAME FIVE - WORD EXPLORER
+// ==========================================
+
+function explorer() {
+ game.innerHTML = `
+ <div>
+  <h2 class="text-2xl font-black">📚 Word Explorer</h2>
+  <p class="text-slate-500 mt-2">Explore all 30 G words.</p>
+
+  <div class="flex flex-wrap gap-2 mt-4">
+   <button class="tab active" onclick="filterWords('all',this)">
+    All Words
+   </button>
+   <button class="tab" onclick="filterWords('soft',this)">
+    🌸 Soft G
+   </button>
+   <button class="tab" onclick="filterWords('hard',this)">
+    🚀 Hard G
+   </button>
+  </div>
+
+  <div id="wordGrid"
+   class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
+  </div>
+ </div>
+ `;
+
+ filterWords("all",game.querySelector(".tab"));
+}
+
+function filterWords(filter,button) {
+ document.querySelectorAll("#game .tab").forEach(b =>
+  b.classList.remove("active")
+ );
+
+ if (button) button.classList.add("active");
+
+ const list = filter === "all"
+  ? words
+  : words.filter(x => x.s === filter);
+
+ document.getElementById("wordGrid").innerHTML =
+ list.map(x => `
+  <article class="rounded-2xl border-2 border-slate-100 p-3">
+   <div class="picture">${pic(x)}</div>
+
+   <div class="flex justify-between items-center mt-2">
+    <b class="text-lg">${x.w}</b>
+    <button onclick="speak('${x.w}')"
+     class="rounded-full bg-indigo-100 px-3 py-1 font-bold">
+     🔊
+    </button>
+   </div>
+
+   <div class="flex items-center gap-2 mt-2">
+    <span class="sound-pill ${x.s}">
+     ${x.s === "soft" ? "Soft G /j/" : "Hard G /g/"}
+    </span>
+    <button onclick="speak('${x.s === "soft" ? "Soft G, j sound" : "Hard G, guh sound"}')"
+     class="text-sm font-bold text-indigo-700">
+     🔊 Sound
+    </button>
+   </div>
+
+   <p class="mt-2 font-bold" lang="am">${x.p}</p>
+   <p class="text-sm text-slate-600" lang="am">${x.m}</p>
+  </article>
+ `).join("");
+}
+
+// ==========================================
+// 10. IMAGE URL EDITOR
+// ==========================================
+
+function toggleEditor() {
+ document.getElementById("editor").classList.toggle("hidden");
+
+ document.getElementById("imageFields").innerHTML =
+ words.map((x,i) => `
+  <label class="text-sm font-bold">
+   ${x.w}
+   <input id="img${i}"
+    class="mt-1 w-full rounded-xl border-2 p-2 font-normal"
+    placeholder="https://example.com/image.png"
+    value="${escapeAttr(x.imageUrl || "")}">
+  </label>
+ `).join("");
+}
+
+function saveImages() {
+ words.forEach((x,i) => {
+  x.imageUrl = document.getElementById("img"+i).value.trim();
+ });
+
+ document.getElementById("saveMsg").textContent =
+  "Pictures saved for this session ✓";
+
+ render();
+}
+
+// ==========================================
+// 11. START APPLICATION
+// ==========================================
+
+render();
+
+</script>
+</body>
+</html>
